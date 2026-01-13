@@ -1,93 +1,163 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useUser } from "../context/UserContext";
+import api from "../services/web-service";
+import { useInteraction } from "../context/InteractionContext";
 
 const RightSidebar = () => {
-  const suggestions = Array.from({ length: 5 }).map((_, i) => ({
-    id: i,
-    username: `suggested_user_${i}`,
-    subtitle: "Followed by user_1 + 2 more",
-    avatar: `https://ui-avatars.com/api/?name=Suggested+${i}&background=random&rounded=true`,
-  }));
+  const { user, isLoading } = useUser();
+  const { suggestions, setSuggestions } = useInteraction();
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
+  const [followedUsers, setFollowedUsers] = useState([]);
+
+  const handleFollow = (userId) => {
+    if (!userId) return;
+    if (followedUsers.includes(userId)) {
+      setFollowedUsers((prev) => prev.filter((id) => id !== userId));
+    } else {
+      setFollowedUsers((prev) => [...prev, userId]);
+    }
+  };
+
+  useEffect(() => {
+    const getSuggestions = async () => {
+      setIsLoadingSuggestions(true);
+      try {
+        const fetchAll = [
+          api.getSearchImageCat({
+            mime_types: "jpg,png",
+            limit: 5,
+          }),
+          api.getSearchImageCat({
+            mime_types: "jpg,png",
+            limit: 5,
+          }),
+        ];
+        const [res, followers] = await Promise.all(fetchAll);
+        const suggest = res.data.map((item, index) => ({
+          id: item.id,
+          username: `cat_lover_${Math.floor(Math.random() * 1000)}`,
+          avatar: item.url,
+          followerAvatar: followers.data[index].url,
+          followedBy: `cat_${Math.floor(Math.random() * 50)}`,
+        }));
+        setSuggestions(suggest);
+      } catch (error) {
+        console.error("Failed to load suggestions", error);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+
+    getSuggestions();
+  }, [setSuggestions]);
 
   return (
-    <div className="hidden xl:flex flex-col w-[320px] pl-[64px] pt-10">
+    <div className="hidden xl:flex flex-col w-[320px] ps-[64px] pt-10">
       {/* User Profile */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4 cursor-pointer">
-          <img
-            src="https://ui-avatars.com/api/?name=My+User&background=random&rounded=true"
-            alt="Profile"
-            className="w-[44px] h-[44px] rounded-full"
-          />
-          <div className="flex flex-col">
-            <span className="font-semibold text-sm">my_username</span>
-            <span className="text-gray-500 text-sm">My Name</span>
+      {isLoading ? (
+        <div className="flex items-center justify-between mb-6 animate-pulse">
+          <div className="flex items-center gap-4">
+            <div className="w-[44px] h-[44px] rounded-full bg-gray-200 dark:bg-gray-800" />
+            <div className="flex flex-col gap-2">
+              <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded" />
+              <div className="h-3 w-32 bg-gray-200 dark:bg-gray-800 rounded" />
+            </div>
           </div>
         </div>
-        <button className="text-blue-500 text-xs font-semibold hover:text-black dark:hover:text-white">
-          Switch
-        </button>
-      </div>
+      ) : (
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4 cursor-pointer">
+            <img
+              src={user?.avatar}
+              alt="Profile"
+              loading="lazy"
+              className="w-[44px] h-[44px] rounded-full object-cover"
+            />
+            <div className="flex flex-col">
+              <span className="font-semibold text-sm">{user?.username}</span>
+              <span className="text-gray-500 text-sm">{user?.fullName}</span>
+            </div>
+          </div>
+          {/* <button className="text-blue-500 text-xs font-semibold hover:text-black dark:hover:text-white">
+            Switch
+          </button> */}
+        </div>
+      )}
 
       {/* Suggestions Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-gray-500 dark:text-gray-400 font-semibold text-sm">
           Suggested for you
         </span>
-        <button className="text-black dark:text-white text-xs font-semibold hover:text-gray-500 dark:hover:text-gray-400">
+        {/* <button className="text-black dark:text-white text-xs font-semibold hover:text-gray-500 dark:hover:text-gray-400">
           See All
-        </button>
+        </button> */}
       </div>
 
       {/* Suggestions List */}
       <div className="flex flex-col space-y-4">
-        {suggestions.map((user) => (
-          <div key={user.id} className="flex items-center justify-between">
-            <div className="flex items-center gap-3 cursor-pointer">
-              <img
-                src={user.avatar}
-                alt={user.username}
-                className="w-[44px] h-[44px] rounded-full"
-              />
-              <div className="flex flex-col">
-                <span className="font-semibold text-sm hover:opacity-80">
-                  {user.username}
-                </span>
-                <span className="text-gray-500 text-xs w-40 truncate">
-                  {user.subtitle}
-                </span>
+        {isLoadingSuggestions
+          ? Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between animate-pulse"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-[44px] h-[44px] rounded-full bg-gray-200 dark:bg-gray-800" />
+                  <div className="flex flex-col gap-2">
+                    <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded" />
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-gray-200 dark:bg-gray-800" />
+                      <div className="h-2 w-20 bg-gray-200 dark:bg-gray-800 rounded" />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <button className="text-blue-500 text-xs font-semibold hover:text-black dark:hover:text-white">
-              Follow
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="mt-8 flex flex-wrap gap-x-1 gap-y-0 text-xs text-gray-500">
-        {[
-          "About",
-          "Help",
-          "Press",
-          "API",
-          "Jobs",
-          "Privacy",
-          "Terms",
-          "Locations",
-          "Language",
-          "Meta Verified",
-        ].map((item, i) => (
-          <React.Fragment key={item}>
-            <a href="#" className="hover:underline">
-              {item}
-            </a>
-            {i !== 9 && <span>·</span>}
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="mt-4 text-xs text-gray-500 uppercase">
-        © 2024 Instagram from Meta
+            ))
+          : suggestions.map((user) => {
+              const isFollowed = followedUsers.includes(user.id);
+              return (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3 cursor-pointer">
+                    <img
+                      src={user.avatar}
+                      alt={user.username}
+                      loading="lazy"
+                      className="w-[44px] h-[44px] rounded-full object-cover"
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-sm hover:opacity-80">
+                        {user.username}
+                      </span>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <img
+                          src={user.followerAvatar}
+                          alt=""
+                          loading="lazy"
+                          className="w-3 h-3 rounded-full object-cover"
+                        />
+                        <span className="truncate w-32">
+                          Followed by {user.followedBy}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleFollow(user.id)}
+                    className={
+                      isFollowed
+                        ? "text-white border border-gray-500 rounded px-2.5 py-1 text-xs font-semibold hover:opacity-80 whitespace-nowrap"
+                        : "text-[#85A1FF] text-xs font-semibold hover:text-white"
+                    }
+                  >
+                    {isFollowed ? "Following" : "Follow"}
+                  </button>
+                </div>
+              );
+            })}
       </div>
     </div>
   );
