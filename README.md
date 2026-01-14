@@ -2,16 +2,38 @@
 
 A responsive Instagram clone application built with React, featuring a modern UI, dark mode support, and interactive functionality.
 
-## 🚀 Getting Started
+## ⚠️ Important: Configuration First
 
-### Prerequisites
+Before running the application (via Docker or locally), you **must** create a `.env` file in the root directory to configure the necessary environment variables.
 
-Before running the project, you **must** configure your environment variables.
+1.  Create a file named `.env` in the root folder.
+2.  Add the following keys:
 
-1.  Create a file named `.env` in the root directory.
-2.  Add your API keys and configuration in the `.env` file (refer to `.env.example` if available, or ask the team for keys).
+    ```env
+    REACT_APP_API_END_POINT=https://api.thecatapi.com/v1
+    REACT_APP_KEY=your_api_key_here
+    ```
 
-### Installation & Run
+    > **Note:** Without these variables, the application and Docker build **will not work correctly**.
+
+## 🚀 Running with Docker Compose (Recommended)
+
+The easiest way to run the application is using Docker Compose.
+
+1.  Ensure you have created the `.env` file as described above.
+2.  Run the following command:
+
+    ```bash
+    docker-compose up --build -d
+    ```
+
+3.  The application will be available at [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 💻 Local Development (Alternative)
+
+If you prefer to run the project without Docker:
 
 ```bash
 # Install dependencies
@@ -19,29 +41,6 @@ npm install
 
 # Start the development server
 npm start
-```
-
-### 🐳 Docker Support
-
-You can also run the application using Docker.
-
-**Using Docker Compose (Recommended):**
-
-```bash
-# Build and run container
-docker-compose up -d --build
-
-# Access the app at http://localhost:3000
-```
-
-**Using Docker manually:**
-
-```bash
-# Build the image
-docker build -t instagram-clone .
-
-# Run the container (Make sure you have a .env file locally if needed, or pass env vars)
-docker run -p 3000:80 --env-file .env instagram-clone
 ```
 
 ## ✨ Features
