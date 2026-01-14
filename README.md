@@ -21,6 +21,29 @@ npm install
 npm start
 ```
 
+### 🐳 Docker Support
+
+You can also run the application using Docker.
+
+**Using Docker Compose (Recommended):**
+
+```bash
+# Build and run container
+docker-compose up -d --build
+
+# Access the app at http://localhost:3000
+```
+
+**Using Docker manually:**
+
+```bash
+# Build the image
+docker build -t instagram-clone .
+
+# Run the container (Make sure you have a .env file locally if needed, or pass env vars)
+docker run -p 3000:80 --env-file .env instagram-clone
+```
+
 ## ✨ Features
 
 - **Search Functionality**:

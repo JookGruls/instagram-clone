@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        - REACT_APP_API_END_POINT=${REACT_APP_API_END_POINT}
+        - REACT_APP_KEY=${REACT_APP_KEY}
+    ports:
+      - "3000:80"
+    restart: always
+    container_name: instagram-clone-container
