@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useInteraction } from "../context/InteractionContext";
+import { useInteraction } from "store/InteractionContext";
 import {
   MoreHorizontal,
   Heart,

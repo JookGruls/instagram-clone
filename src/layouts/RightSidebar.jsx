@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useUser } from "../context/UserContext";
-import api from "../services/web-service";
-import { useInteraction } from "../context/InteractionContext";
+import { useState, useEffect } from "react";
+import { useUser } from "store/UserContext";
+import api from "services/web-service";
+import { useInteraction } from "store/InteractionContext";
 
 const RightSidebar = () => {
   const { user, isLoading } = useUser();
@@ -52,7 +52,7 @@ const RightSidebar = () => {
   }, [setSuggestions]);
 
   return (
-    <div className="hidden xl:flex flex-col w-[320px] ps-[64px] pt-10">
+    <div className="hidden lg:flex flex-col w-[320px] ps-[64px] pt-10">
       {/* User Profile */}
       {isLoading ? (
         <div className="flex items-center justify-between mb-6 animate-pulse">
@@ -78,9 +78,6 @@ const RightSidebar = () => {
               <span className="text-gray-500 text-sm">{user?.fullName}</span>
             </div>
           </div>
-          {/* <button className="text-blue-500 text-xs font-semibold hover:text-black dark:hover:text-white">
-            Switch
-          </button> */}
         </div>
       )}
 
@@ -89,9 +86,6 @@ const RightSidebar = () => {
         <span className="text-gray-500 dark:text-gray-400 font-semibold text-sm">
           Suggested for you
         </span>
-        {/* <button className="text-black dark:text-white text-xs font-semibold hover:text-gray-500 dark:hover:text-gray-400">
-          See All
-        </button> */}
       </div>
 
       {/* Suggestions List */}

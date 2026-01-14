@@ -1,9 +1,9 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
-import Stories from "./Stories";
-import Post from "./Post";
-import PostSkeleton from "./PostSkeleton";
-import { useInteraction } from "../context/InteractionContext";
-import api from "../services/web-service";
+import Stories from "components/Stories";
+import Post from "components/Post";
+import PostSkeleton from "components/PostSkeleton";
+import { useInteraction } from "store/InteractionContext";
+import api from "services/web-service";
 
 const Feed = () => {
   const { posts, setPosts } = useInteraction();

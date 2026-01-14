@@ -1,0 +1,705 @@
+import React, { useState, useRef, useEffect } from "react";
+import SearchDrawer from "../components/SearchDrawer";
+import {
+  Instagram as IconIG,
+  Settings,
+  Activity,
+  Bookmark,
+  Moon,
+  MessageSquareWarning,
+  ChevronLeft,
+  Sun,
+  Heart,
+  X,
+} from "lucide-react";
+
+import api from "../services/web-service";
+import { useUser } from "../store/UserContext";
+import { useNavigate, Link } from "react-router-dom";
+import { useInteraction } from "../store/InteractionContext";
+
+const Sidebar = ({ isProfilePage = false }) => {
+  const { user } = useUser();
+  const { searchInfo, setSearchInfo } = useInteraction();
+  const navigate = useNavigate();
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [showAppearanceMenu, setShowAppearanceMenu] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const buttonRef = useRef(null);
+
+  // Mobile Search State
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  const [mobileSearchResult, setMobileSearchResult] = useState([]);
+  const [isMobileSearchLoading, setIsMobileSearchLoading] = useState(false);
+  const mobileTimeoutRef = useRef(null);
+
+  const handleMobileSearch = async (query) => {
+    if (!query) {
+      setMobileSearchResult([]);
+      return;
+    }
+    try {
+      setIsMobileSearchLoading(true);
+      const res = await api.getSearchImageCat({
+        breed_ids: query,
+        limit: 5,
+      });
+      const newResult = res.data.map((item) => ({
+        id: item.id,
+        name: `cat_lover_${Math.floor(Math.random() * 1000)}`,
+        breed: item.breeds?.[0]?.name,
+        url: item.url,
+        followers: Math.floor(Math.random() * 1000),
+      }));
+      setMobileSearchResult(newResult);
+    } catch (error) {
+      console.error("Failed to search", error);
+    } finally {
+      setIsMobileSearchLoading(false);
+    }
+  };
+
+  const onMobileSearchChange = (e) => {
+    const value = e.target.value;
+    setMobileSearchQuery(value);
+
+    if (mobileTimeoutRef.current) clearTimeout(mobileTimeoutRef.current);
+    mobileTimeoutRef.current = setTimeout(() => {
+      handleMobileSearch(value);
+    }, 1000);
+  };
+
+  const handleGetInfo = (item) => {
+    navigate(`/${item.id}`);
+    setSearchInfo(item);
+  };
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isMoreMenuOpen &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setIsMoreMenuOpen(false);
+        setTimeout(() => setShowAppearanceMenu(false), 300); // Reset submenu after closing
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMoreMenuOpen]);
+
+  const menuIconProps = { size: 20, strokeWidth: 2.5 };
+
+  const menuItems = [
+    {
+      icon: (
+        <svg
+          fill="currentColor"
+          height="24"
+          role="img"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <path d="m21.762 8.786-7-6.68a3.994 3.994 0 0 0-5.524 0l-7 6.681A4.017 4.017 0 0 0 1 11.68V19c0 2.206 1.794 4 4 4h3.005a1 1 0 0 0 1-1v-7.003a2.997 2.997 0 0 1 5.994 0V22a1 1 0 0 0 1 1H19c2.206 0 4-1.794 4-4v-7.32a4.02 4.02 0 0 0-1.238-2.894Z"></path>
+        </svg>
+      ),
+      label: "Home",
+      route: "/",
+    },
+    {
+      icon: (
+        <svg
+          fill="currentColor"
+          height="24"
+          role="img"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <path
+            d="M19 10.5A8.5 8.5 0 1 1 10.5 2a8.5 8.5 0 0 1 8.5 8.5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          ></path>
+          <line
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            x1="16.511"
+            x2="22"
+            y1="16.511"
+            y2="22"
+          ></line>
+        </svg>
+      ),
+      label: "Search",
+      onClick: (e) => {
+        e.preventDefault();
+        setIsSearchOpen(!isSearchOpen);
+      },
+    },
+    {
+      icon: (
+        <svg
+          fill="currentColor"
+          height="24"
+          role="img"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <polygon
+            fill="none"
+            points="13.941 13.953 7.581 16.424 10.06 10.056 16.42 7.585 13.941 13.953"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          ></polygon>
+          <polygon
+            fillRule="evenodd"
+            points="10.06 10.056 13.949 13.945 7.581 16.424 10.06 10.056"
+          ></polygon>
+          <circle
+            cx="12.001"
+            cy="12.005"
+            fill="none"
+            r="10.5"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          ></circle>
+        </svg>
+      ),
+      label: "Explore",
+      route: "/explore",
+    },
+    {
+      icon: (
+        <svg
+          fill="currentColor"
+          height="24"
+          role="img"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <path d="M22.935 7.468c-.063-1.36-.307-2.142-.512-2.67a5.341 5.341 0 0 0-1.27-1.95 5.345 5.345 0 0 0-1.95-1.27c-.53-.206-1.311-.45-2.672-.513C15.333 1.012 14.976 1 12 1s-3.333.012-4.532.065c-1.36.063-2.142.307-2.67.512-.77.298-1.371.69-1.95 1.27a5.36 5.36 0 0 0-1.27 1.95c-.206.53-.45 1.311-.513 2.672C1.012 8.667 1 9.024 1 12s.012 3.333.065 4.532c.063 1.36.307 2.142.512 2.67.297.77.69 1.372 1.27 1.95.58.581 1.181.974 1.95 1.27.53.206 1.311.45 2.672.513C8.667 22.988 9.024 23 12 23s3.333-.012 4.532-.065c1.36-.063 2.142-.307 2.67-.512a5.33 5.33 0 0 0 1.95-1.27 5.356 5.356 0 0 0 1.27-1.95c.206-.53.45-1.311.513-2.672.053-1.198.065-1.555.065-4.531s-.012-3.333-.065-4.532Zm-1.998 8.972c-.05 1.07-.228 1.652-.38 2.04-.197.51-.434.874-.82 1.258a3.362 3.362 0 0 1-1.258.82c-.387.151-.97.33-2.038.379-1.162.052-1.51.063-4.441.063s-3.28-.01-4.44-.063c-1.07-.05-1.652-.228-2.04-.38a3.354 3.354 0 0 1-1.258-.82 3.362 3.362 0 0 1-.82-1.258c-.151-.387-.33-.97-.379-2.038C3.011 15.28 3 14.931 3 12s.01-3.28.063-4.44c.05-1.07.228-1.652.38-2.04.197-.51.434-.875.82-1.26a3.372 3.372 0 0 1 1.258-.819c.387-.15.97-.329 2.038-.378C8.72 3.011 9.069 3 12 3s3.28.01 4.44.063c1.07.05 1.652.228 2.04.38.51.197.874.433 1.258.82.385.382.622.747.82 1.258.151.387.33.97.379 2.038C20.989 8.72 21 9.069 21 12s-.01 3.28-.063 4.44Zm-4.584-6.828-5.25-3a2.725 2.725 0 0 0-2.745.01A2.722 2.722 0 0 0 6.988 9v6c0 .992.512 1.88 1.37 2.379.432.25.906.376 1.38.376.468 0 .937-.123 1.365-.367l5.25-3c.868-.496 1.385-1.389 1.385-2.388s-.517-1.892-1.385-2.388Zm-.993 3.04-5.25 3a.74.74 0 0 1-.748-.003.74.74 0 0 1-.374-.649V9a.74.74 0 0 1 .374-.65.737.737 0 0 1 .748-.002l5.25 3c.341.196.378.521.378.652s-.037.456-.378.651Z"></path>
+        </svg>
+      ),
+      label: "Reels",
+      route: "/reels",
+    }, // Clapperboard is closer to Reels than Film
+    {
+      icon: (
+        <svg
+          fill="currentColor"
+          height="24"
+          role="img"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <path
+            d="M13.973 20.046 21.77 6.928C22.8 5.195 21.55 3 19.535 3H4.466C2.138 3 .984 5.825 2.646 7.456l4.842 4.752 1.723 7.121c.548 2.266 3.571 2.721 4.762.717Z"
+            fill="none"
+            stroke="currentColor"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          ></path>
+          <line
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            x1="7.488"
+            x2="15.515"
+            y1="12.208"
+            y2="7.641"
+          ></line>
+        </svg>
+      ),
+      label: "Messages",
+      route: "/messages",
+    },
+    {
+      icon: (
+        <svg
+          fill="currentColor"
+          height="24"
+          role="img"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"></path>
+        </svg>
+      ),
+      label: "Notifications",
+      route: "/notifications",
+    },
+    {
+      icon: (
+        <svg
+          aria-label="โพสต์ใหม่"
+          className="x1lliihq x1n2onr6 x5n08af"
+          fill="currentColor"
+          height="24"
+          role="img"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <path d="M21 11h-8V3a1 1 0 1 0-2 0v8H3a1 1 0 1 0 0 2h8v8a1 1 0 1 0 2 0v-8h8a1 1 0 1 0 0-2Z"></path>
+        </svg>
+      ),
+      label: "Create",
+    },
+    {
+      icon: (
+        <img src={user.avatar} alt="Profile" className="w-7 h-7 rounded-full" />
+      ),
+      label: "Profile",
+      route: `/${user.username}`,
+    },
+  ];
+
+  const moreMenuItems = [
+    { icon: <Settings {...menuIconProps} />, label: "Settings" },
+    { icon: <Activity {...menuIconProps} />, label: "Your activity" },
+    { icon: <Bookmark {...menuIconProps} />, label: "Saved" },
+    {
+      icon: <Moon {...menuIconProps} />,
+      label: "Switch appearance",
+      action: () => setShowAppearanceMenu(true),
+    },
+    {
+      icon: <MessageSquareWarning {...menuIconProps} />,
+      label: "Report a problem",
+    },
+  ];
+
+  return (
+    <>
+      {isMoreMenuOpen && (
+        <div
+          ref={menuRef}
+          className="fixed left-3 bottom-32 w-[266px] bg-white dark:bg-[#262626] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-xl overflow-hidden p-2 ring-1 ring-black/5 dark:ring-0 z-[60]"
+        >
+          {showAppearanceMenu ? (
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 mb-2">
+                <button
+                  onClick={() => setShowAppearanceMenu(false)}
+                  className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <span className="font-bold text-base text-black dark:text-white">
+                  Switch appearance
+                </span>
+                {isDarkMode ? (
+                  <Moon size={24} className="text-black dark:text-white" />
+                ) : (
+                  <Sun size={24} className="text-black dark:text-white" />
+                )}
+              </div>
+              <div
+                className="flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-[#3C3C3C] rounded-lg cursor-pointer"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+              >
+                <span className="text-base text-black dark:text-white">
+                  Dark mode
+                </span>
+                <div
+                  className={`w-10 h-6 flex items-center bg-gray-300 dark:bg-gray-600 rounded-full p-1 duration-300 ease-in-out ${
+                    isDarkMode ? "bg-white" : ""
+                  }`}
+                >
+                  <div
+                    className={`bg-white dark:bg-black w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${
+                      isDarkMode ? "translate-x-4" : ""
+                    }`}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {moreMenuItems.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    if (item.action) {
+                      item.action();
+                    } else {
+                      // Default action or navigation
+                    }
+                  }}
+                  className="flex items-center gap-4 p-4 hover:bg-gray-100 dark:hover:bg-[#3C3C3C] rounded-lg transition-colors text-black dark:text-white w-full text-left"
+                >
+                  {item.icon}
+                  <span className="text-sm font-normal">{item.label}</span>
+                </button>
+              ))}
+              <div className="h-[6px] bg-gray-100 dark:bg-[#3B3B3B] -mx-2 my-2 rounded-sm opacity-100 dark:opacity-30"></div>
+              <button className="flex items-center gap-4 p-4 hover:bg-gray-100 dark:hover:bg-[#3C3C3C] rounded-lg transition-colors text-black dark:text-white w-full text-left">
+                <span className="text-sm font-normal">Switch accounts</span>
+              </button>
+              <div className="h-[1px] bg-gray-100 dark:bg-[#3B3B3B] my-1 opacity-100 dark:opacity-30 p-0 m-0"></div>
+              <button className="flex items-center gap-4 p-4 hover:bg-gray-100 dark:hover:bg-[#3C3C3C] rounded-lg transition-colors text-black dark:text-white w-full text-left">
+                <span className="text-sm font-normal">Log out</span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="md:hidden fixed top-0 left-0 right-0 h-[60px] bg-white dark:bg-black z-50 flex items-center justify-between px-4">
+        {isProfilePage ? (
+          <div className="relative flex items-center justify-center w-full">
+            <button
+              className="absolute left-0"
+              onClick={() => {
+                setSearchInfo({});
+                navigate("/");
+              }}
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <h1 className="text-black dark:text-white font-semibold">
+              {searchInfo?.name}
+            </h1>
+          </div>
+        ) : (
+          <svg
+            fill="currentColor"
+            height="29"
+            role="img"
+            viewBox="32 4 113 32"
+            width="103"
+          >
+            <path
+              clipRule="evenodd"
+              d="M37.82 4.11c-2.32.97-4.86 3.7-5.66 7.13-1.02 4.34 3.21 6.17 3.56 5.57.4-.7-.76-.94-1-3.2-.3-2.9 1.05-6.16 2.75-7.58.32-.27.3.1.3.78l-.06 14.46c0 3.1-.13 4.07-.36 5.04-.23.98-.6 1.64-.33 1.9.32.28 1.68-.4 2.46-1.5a8.13 8.13 0 0 0 1.33-4.58c.07-2.06.06-5.33.07-7.19 0-1.7.03-6.71-.03-9.72-.02-.74-2.07-1.51-3.03-1.1Zm82.13 14.48a9.42 9.42 0 0 1-.88 3.75c-.85 1.72-2.63 2.25-3.39-.22-.4-1.34-.43-3.59-.13-5.47.3-1.9 1.14-3.35 2.53-3.22 1.38.13 2.02 1.9 1.87 5.16ZM96.8 28.57c-.02 2.67-.44 5.01-1.34 5.7-1.29.96-3 .23-2.65-1.72.31-1.72 1.8-3.48 4-5.64l-.01 1.66Zm-.35-10a10.56 10.56 0 0 1-.88 3.77c-.85 1.72-2.64 2.25-3.39-.22-.5-1.69-.38-3.87-.13-5.25.33-1.78 1.12-3.44 2.53-3.44 1.38 0 2.06 1.5 1.87 5.14Zm-13.41-.02a9.54 9.54 0 0 1-.87 3.8c-.88 1.7-2.63 2.24-3.4-.23-.55-1.77-.36-4.2-.13-5.5.34-1.95 1.2-3.32 2.53-3.2 1.38.14 2.04 1.9 1.87 5.13Zm61.45 1.81c-.33 0-.49.35-.61.93-.44 2.02-.9 2.48-1.5 2.48-.66 0-1.26-1-1.42-3-.12-1.58-.1-4.48.06-7.37.03-.59-.14-1.17-1.73-1.75-.68-.25-1.68-.62-2.17.58a29.65 29.65 0 0 0-2.08 7.14c0 .06-.08.07-.1-.06-.07-.87-.26-2.46-.28-5.79 0-.65-.14-1.2-.86-1.65-.47-.3-1.88-.81-2.4-.2-.43.5-.94 1.87-1.47 3.48l-.74 2.2.01-4.88c0-.5-.34-.67-.45-.7a9.54 9.54 0 0 0-1.8-.37c-.48 0-.6.27-.6.67 0 .05-.08 4.65-.08 7.87v.46c-.27 1.48-1.14 3.49-2.09 3.49s-1.4-.84-1.4-4.68c0-2.24.07-3.21.1-4.83.02-.94.06-1.65.06-1.81-.01-.5-.87-.75-1.27-.85-.4-.09-.76-.13-1.03-.11-.4.02-.67.27-.67.62v.55a3.71 3.71 0 0 0-1.83-1.49c-1.44-.43-2.94-.05-4.07 1.53a9.31 9.31 0 0 0-1.66 4.73c-.16 1.5-.1 3.01.17 4.3-.33 1.44-.96 2.04-1.64 2.04-.99 0-1.7-1.62-1.62-4.4.06-1.84.42-3.13.82-4.99.17-.8.04-1.2-.31-1.6-.32-.37-1-.56-1.99-.33-.7.16-1.7.34-2.6.47 0 0 .05-.21.1-.6.23-2.03-1.98-1.87-2.69-1.22-.42.39-.7.84-.82 1.67-.17 1.3.9 1.91.9 1.91a22.22 22.22 0 0 1-3.4 7.23v-.7c-.01-3.36.03-6 .05-6.95.02-.94.06-1.63.06-1.8 0-.36-.22-.5-.66-.67-.4-.16-.86-.26-1.34-.3-.6-.05-.97.27-.96.65v.52a3.7 3.7 0 0 0-1.84-1.49c-1.44-.43-2.94-.05-4.07 1.53a10.1 10.1 0 0 0-1.66 4.72c-.15 1.57-.13 2.9.09 4.04-.23 1.13-.89 2.3-1.63 2.3-.95 0-1.5-.83-1.5-4.67 0-2.24.07-3.21.1-4.83.02-.94.06-1.65.06-1.81 0-.5-.87-.75-1.27-.85-.42-.1-.79-.13-1.06-.1-.37.02-.63.35-.63.6v.56a3.7 3.7 0 0 0-1.84-1.49c-1.44-.43-2.93-.04-4.07 1.53-.75 1.03-1.35 2.17-1.66 4.7a15.8 15.8 0 0 0-.12 2.04c-.3 1.81-1.61 3.9-2.68 3.9-.63 0-1.23-1.21-1.23-3.8 0-3.45.22-8.36.25-8.83l1.62-.03c.68 0 1.29.01 2.19-.04.45-.02.88-1.64.42-1.84-.21-.09-1.7-.17-2.3-.18-.5-.01-1.88-.11-1.88-.11s.13-3.26.16-3.6c.02-.3-.35-.44-.57-.53a7.77 7.77 0 0 0-1.53-.44c-.76-.15-1.1 0-1.17.64-.1.97-.15 3.82-.15 3.82-.56 0-2.47-.11-3.02-.11-.52 0-1.08 2.22-.36 2.25l3.2.09-.03 6.53v.47c-.53 2.73-2.37 4.2-2.37 4.2.4-1.8-.42-3.15-1.87-4.3-.54-.42-1.6-1.22-2.79-2.1 0 0 .69-.68 1.3-2.04.43-.96.45-2.06-.61-2.3-1.75-.41-3.2.87-3.63 2.25a2.61 2.61 0 0 0 .5 2.66l.15.19c-.4.76-.94 1.78-1.4 2.58-1.27 2.2-2.24 3.95-2.97 3.95-.58 0-.57-1.77-.57-3.43 0-1.43.1-3.58.19-5.8.03-.74-.34-1.16-.96-1.54a4.33 4.33 0 0 0-1.64-.69c-.7 0-2.7.1-4.6 5.57-.23.69-.7 1.94-.7 1.94l.04-6.57c0-.16-.08-.3-.27-.4a4.68 4.68 0 0 0-1.93-.54c-.36 0-.54.17-.54.5l-.07 10.3c0 .78.02 1.69.1 2.09.08.4.2.72.36.91.15.2.33.34.62.4.28.06 1.78.25 1.86-.32.1-.69.1-1.43.89-4.2 1.22-4.31 2.82-6.42 3.58-7.16.13-.14.28-.14.27.07l-.22 5.32c-.2 5.37.78 6.36 2.17 6.36 1.07 0 2.58-1.06 4.2-3.74l2.7-4.5 1.58 1.46c1.28 1.2 1.7 2.36 1.42 3.45-.21.83-1.02 1.7-2.44.86-.42-.25-.6-.44-1.01-.71-.23-.15-.57-.2-.78-.04-.53.4-.84.92-1.01 1.55-.17.61.45.94 1.09 1.22.55.25 1.74.47 2.5.5 2.94.1 5.3-1.42 6.94-5.34.3 3.38 1.55 5.3 3.72 5.3 1.45 0 2.91-1.88 3.55-3.72.18.75.45 1.4.8 1.96 1.68 2.65 4.93 2.07 6.56-.18.5-.69.58-.94.58-.94a3.07 3.07 0 0 0 2.94 2.87c1.1 0 2.23-.52 3.03-2.31.09.2.2.38.3.56 1.68 2.65 4.93 2.07 6.56-.18l.2-.28.05 1.4-1.5 1.37c-2.52 2.3-4.44 4.05-4.58 6.09-.18 2.6 1.93 3.56 3.53 3.69a4.5 4.5 0 0 0 4.04-2.11c.78-1.15 1.3-3.63 1.26-6.08l-.06-3.56a28.55 28.55 0 0 0 5.42-9.44s.93.01 1.92-.05c.32-.02.41.04.35.27-.07.28-1.25 4.84-.17 7.88.74 2.08 2.4 2.75 3.4 2.75 1.15 0 2.26-.87 2.85-2.17l.23.42c1.68 2.65 4.92 2.07 6.56-.18.37-.5.58-.94.58-.94.36 2.2 2.07 2.88 3.05 2.88 1.02 0 2-.42 2.78-2.28.03.82.08 1.49.16 1.7.05.13.34.3.56.37.93.34 1.88.18 2.24.11.24-.05.43-.25.46-.75.07-1.33.03-3.56.43-5.21.67-2.79 1.3-3.87 1.6-4.4.17-.3.36-.35.37-.03.01.64.04 2.52.3 5.05.2 1.86.46 2.96.65 3.3.57 1 1.27 1.05 1.83 1.05.36 0 1.12-.1 1.05-.73-.03-.31.02-2.22.7-4.96.43-1.79 1.15-3.4 1.41-4 .1-.21.15-.04.15 0-.06 1.22-.18 5.25.32 7.46.68 2.98 2.65 3.32 3.34 3.32 1.47 0 2.67-1.12 3.07-4.05.1-.7-.05-1.25-.48-1.25Z"
+              fill="currentColor"
+              fillRule="evenodd"
+            ></path>
+          </svg>
+        )}
+
+        {!isProfilePage ? (
+          <div className="relative flex items-center justify-end flex-1 mx-4">
+            <div className="bg-[#EFEFEF] dark:bg-[#262626] flex items-center px-4 py-1.5 rounded-3xl min-w-[125px] max-w-[268px] w-full h-11">
+              <svg
+                aria-label="ค้นหา"
+                className="x1lliihq x1n2onr6 x5n08af text-[#8e8e8e]"
+                fill="currentColor"
+                height="16"
+                role="img"
+                viewBox="0 0 24 24"
+                width="16"
+              >
+                <path
+                  d="M19 10.5A8.5 8.5 0 1 1 10.5 2a8.5 8.5 0 0 1 8.5 8.5Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                ></path>
+                <line
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  x1="16.511"
+                  x2="22"
+                  y1="16.511"
+                  y2="22"
+                ></line>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search"
+                className="bg-transparent border-none focus:outline-none focus:ring-0 text-black dark:text-white text-sm font-light ml-2 w-full h-full placeholder-[#8e8e8e]"
+                onChange={onMobileSearchChange}
+                value={mobileSearchQuery}
+              />
+              {mobileSearchQuery && (
+                <button
+                  onClick={() => {
+                    setMobileSearchQuery("");
+                    setMobileSearchResult([]);
+                  }}
+                  className="text-[#8e8e8e] hover:text-black dark:hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Search Dropdown */}
+            {mobileSearchQuery && (
+              <div className="absolute top-full right-0 mt-2 bg-white dark:bg-[#262626] shadow-xl rounded-lg overflow-hidden z-[60] min-w-[125px] max-w-[268px] w-full overflow-y-auto">
+                {isMobileSearchLoading ? (
+                  <div className="flex flex-col">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 p-3 animate-pulse"
+                      >
+                        <div className="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="flex flex-col gap-2 flex-1">
+                          <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                          <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : mobileSearchResult.length > 0 ? (
+                  mobileSearchResult.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-[#3C3C3C] cursor-pointer"
+                      onClick={() => handleGetInfo(user)}
+                    >
+                      <div className="relative">
+                        <img
+                          src={user.url}
+                          alt={user.name}
+                          className="w-11 h-11 rounded-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-semibold text-black dark:text-white">
+                            {user.name}
+                          </span>
+                          <span className="text-blue-500">
+                            <svg
+                              aria-label="Verified"
+                              className="x1lliihq x1n2onr6"
+                              fill="currentColor"
+                              height="12"
+                              role="img"
+                              viewBox="0 0 40 40"
+                              width="12"
+                            >
+                              <title>Verified</title>
+                              <path
+                                d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.681 9.18-9.28Z"
+                                fillRule="evenodd"
+                              ></path>
+                            </svg>
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {user.breed} • {user.followers} followers
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    No results found.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {!isProfilePage ? (
+          <Heart
+            size={24}
+            className="text-black dark:text-white cursor-pointer"
+          />
+        ) : null}
+      </div>
+
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[60px] bg-white dark:bg-black border-t border-gray-300 dark:border-[#383838] z-50 flex items-center justify-around px-2">
+        {menuItems.map((item, index) => {
+          if (item.label === "Search" || item.label === "Notifications")
+            return null;
+
+          // Replace Messages icon logic for bottom bar specific badge if needed, or reuse
+          if (item.label === "Messages") {
+            return (
+              <div key={index} className="cursor-pointer relative p-2">
+                {item.icon}
+                <div className="absolute top-1 right-0 bg-red-600 text-white text-[10px] font-bold px-1 rounded-full min-w-[14px] h-[14px] flex items-center justify-center">
+                  4
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={index}
+              className="cursor-pointer p-2 text-black dark:text-white"
+            >
+              {item.icon}
+            </div>
+          );
+        })}
+      </div>
+
+      <div
+        className={`fixed left-0 top-0 h-full border-r border-gray-300 dark:border-[#383838] bg-white dark:bg-black px-3 py-5 hidden md:flex flex-col z-50 transition-transform duration-300 w-fit xl:w-[335px] overflow-hidden`}
+        style={{
+          transform: isSearchOpen ? "translateX(-263px)" : "translateX(0)",
+        }}
+      >
+        <div
+          className="h-full w-full flex flex-col transition-transform duration-300"
+          style={{
+            transform: isSearchOpen ? "translateX(263px)" : "translateX(0)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              if (!isSearchOpen) return;
+              setIsSearchOpen(!isSearchOpen);
+              navigate("/");
+            }}
+            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-900 transition-colors group pt-6 pb-4 mb-5"
+          >
+            {!isSearchOpen && (
+              <svg
+                className="group-hover:scale-105 transition-transform text-black dark:text-white hidden xl:block"
+                fill="currentColor"
+                height="29"
+                role="img"
+                viewBox="32 4 113 32"
+                width="103"
+              >
+                <path
+                  clipRule="evenodd"
+                  d="M37.82 4.11c-2.32.97-4.86 3.7-5.66 7.13-1.02 4.34 3.21 6.17 3.56 5.57.4-.7-.76-.94-1-3.2-.3-2.9 1.05-6.16 2.75-7.58.32-.27.3.1.3.78l-.06 14.46c0 3.1-.13 4.07-.36 5.04-.23.98-.6 1.64-.33 1.9.32.28 1.68-.4 2.46-1.5a8.13 8.13 0 0 0 1.33-4.58c.07-2.06.06-5.33.07-7.19 0-1.7.03-6.71-.03-9.72-.02-.74-2.07-1.51-3.03-1.1Zm82.13 14.48a9.42 9.42 0 0 1-.88 3.75c-.85 1.72-2.63 2.25-3.39-.22-.4-1.34-.43-3.59-.13-5.47.3-1.9 1.14-3.35 2.53-3.22 1.38.13 2.02 1.9 1.87 5.16ZM96.8 28.57c-.02 2.67-.44 5.01-1.34 5.7-1.29.96-3 .23-2.65-1.72.31-1.72 1.8-3.48 4-5.64l-.01 1.66Zm-.35-10a10.56 10.56 0 0 1-.88 3.77c-.85 1.72-2.64 2.25-3.39-.22-.5-1.69-.38-3.87-.13-5.25.33-1.78 1.12-3.44 2.53-3.44 1.38 0 2.06 1.5 1.87 5.14Zm-13.41-.02a9.54 9.54 0 0 1-.87 3.8c-.88 1.7-2.63 2.24-3.4-.23-.55-1.77-.36-4.2-.13-5.5.34-1.95 1.2-3.32 2.53-3.2 1.38.14 2.04 1.9 1.87 5.13Zm61.45 1.81c-.33 0-.49.35-.61.93-.44 2.02-.9 2.48-1.5 2.48-.66 0-1.26-1-1.42-3-.12-1.58-.1-4.48.06-7.37.03-.59-.14-1.17-1.73-1.75-.68-.25-1.68-.62-2.17.58a29.65 29.65 0 0 0-2.08 7.14c0 .06-.08.07-.1-.06-.07-.87-.26-2.46-.28-5.79 0-.65-.14-1.2-.86-1.65-.47-.3-1.88-.81-2.4-.2-.43.5-.94 1.87-1.47 3.48l-.74 2.2.01-4.88c0-.5-.34-.67-.45-.7a9.54 9.54 0 0 0-1.8-.37c-.48 0-.6.27-.6.67 0 .05-.08 4.65-.08 7.87v.46c-.27 1.48-1.14 3.49-2.09 3.49s-1.4-.84-1.4-4.68c0-2.24.07-3.21.1-4.83.02-.94.06-1.65.06-1.81-.01-.5-.87-.75-1.27-.85-.4-.09-.76-.13-1.03-.11-.4.02-.67.27-.67.62v.55a3.71 3.71 0 0 0-1.83-1.49c-1.44-.43-2.94-.05-4.07 1.53a9.31 9.31 0 0 0-1.66 4.73c-.16 1.5-.1 3.01.17 4.3-.33 1.44-.96 2.04-1.64 2.04-.99 0-1.7-1.62-1.62-4.4.06-1.84.42-3.13.82-4.99.17-.8.04-1.2-.31-1.6-.32-.37-1-.56-1.99-.33-.7.16-1.7.34-2.6.47 0 0 .05-.21.1-.6.23-2.03-1.98-1.87-2.69-1.22-.42.39-.7.84-.82 1.67-.17 1.3.9 1.91.9 1.91a22.22 22.22 0 0 1-3.4 7.23v-.7c-.01-3.36.03-6 .05-6.95.02-.94.06-1.63.06-1.8 0-.36-.22-.5-.66-.67-.4-.16-.86-.26-1.34-.3-.6-.05-.97.27-.96.65v.52a3.7 3.7 0 0 0-1.84-1.49c-1.44-.43-2.94-.05-4.07 1.53a10.1 10.1 0 0 0-1.66 4.72c-.15 1.57-.13 2.9.09 4.04-.23 1.13-.89 2.3-1.63 2.3-.95 0-1.5-.83-1.5-4.67 0-2.24.07-3.21.1-4.83.02-.94.06-1.65.06-1.81 0-.5-.87-.75-1.27-.85-.42-.1-.79-.13-1.06-.1-.37.02-.63.35-.63.6v.56a3.7 3.7 0 0 0-1.84-1.49c-1.44-.43-2.93-.04-4.07 1.53-.75 1.03-1.35 2.17-1.66 4.7a15.8 15.8 0 0 0-.12 2.04c-.3 1.81-1.61 3.9-2.68 3.9-.63 0-1.23-1.21-1.23-3.8 0-3.45.22-8.36.25-8.83l1.62-.03c.68 0 1.29.01 2.19-.04.45-.02.88-1.64.42-1.84-.21-.09-1.7-.17-2.3-.18-.5-.01-1.88-.11-1.88-.11s.13-3.26.16-3.6c.02-.3-.35-.44-.57-.53a7.77 7.77 0 0 0-1.53-.44c-.76-.15-1.1 0-1.17.64-.1.97-.15 3.82-.15 3.82-.56 0-2.47-.11-3.02-.11-.52 0-1.08 2.22-.36 2.25l3.2.09-.03 6.53v.47c-.53 2.73-2.37 4.2-2.37 4.2.4-1.8-.42-3.15-1.87-4.3-.54-.42-1.6-1.22-2.79-2.1 0 0 .69-.68 1.3-2.04.43-.96.45-2.06-.61-2.3-1.75-.41-3.2.87-3.63 2.25a2.61 2.61 0 0 0 .5 2.66l.15.19c-.4.76-.94 1.78-1.4 2.58-1.27 2.2-2.24 3.95-2.97 3.95-.58 0-.57-1.77-.57-3.43 0-1.43.1-3.58.19-5.8.03-.74-.34-1.16-.96-1.54a4.33 4.33 0 0 0-1.64-.69c-.7 0-2.7.1-4.6 5.57-.23.69-.7 1.94-.7 1.94l.04-6.57c0-.16-.08-.3-.27-.4a4.68 4.68 0 0 0-1.93-.54c-.36 0-.54.17-.54.5l-.07 10.3c0 .78.02 1.69.1 2.09.08.4.2.72.36.91.15.2.33.34.62.4.28.06 1.78.25 1.86-.32.1-.69.1-1.43.89-4.2 1.22-4.31 2.82-6.42 3.58-7.16.13-.14.28-.14.27.07l-.22 5.32c-.2 5.37.78 6.36 2.17 6.36 1.07 0 2.58-1.06 4.2-3.74l2.7-4.5 1.58 1.46c1.28 1.2 1.7 2.36 1.42 3.45-.21.83-1.02 1.7-2.44.86-.42-.25-.6-.44-1.01-.71-.23-.15-.57-.2-.78-.04-.53.4-.84.92-1.01 1.55-.17.61.45.94 1.09 1.22.55.25 1.74.47 2.5.5 2.94.1 5.3-1.42 6.94-5.34.3 3.38 1.55 5.3 3.72 5.3 1.45 0 2.91-1.88 3.55-3.72.18.75.45 1.4.8 1.96 1.68 2.65 4.93 2.07 6.56-.18.5-.69.58-.94.58-.94a3.07 3.07 0 0 0 2.94 2.87c1.1 0 2.23-.52 3.03-2.31.09.2.2.38.3.56 1.68 2.65 4.93 2.07 6.56-.18l.2-.28.05 1.4-1.5 1.37c-2.52 2.3-4.44 4.05-4.58 6.09-.18 2.6 1.93 3.56 3.53 3.69a4.5 4.5 0 0 0 4.04-2.11c.78-1.15 1.3-3.63 1.26-6.08l-.06-3.56a28.55 28.55 0 0 0 5.42-9.44s.93.01 1.92-.05c.32-.02.41.04.35.27-.07.28-1.25 4.84-.17 7.88.74 2.08 2.4 2.75 3.4 2.75 1.15 0 2.26-.87 2.85-2.17l.23.42c1.68 2.65 4.92 2.07 6.56-.18.37-.5.58-.94.58-.94.36 2.2 2.07 2.88 3.05 2.88 1.02 0 2-.42 2.78-2.28.03.82.08 1.49.16 1.7.05.13.34.3.56.37.93.34 1.88.18 2.24.11.24-.05.43-.25.46-.75.07-1.33.03-3.56.43-5.21.67-2.79 1.3-3.87 1.6-4.4.17-.3.36-.35.37-.03.01.64.04 2.52.3 5.05.2 1.86.46 2.96.65 3.3.57 1 1.27 1.05 1.83 1.05.36 0 1.12-.1 1.05-.73-.03-.31.02-2.22.7-4.96.43-1.79 1.15-3.4 1.41-4 .1-.21.15-.04.15 0-.06 1.22-.18 5.25.32 7.46.68 2.98 2.65 3.32 3.34 3.32 1.47 0 2.67-1.12 3.07-4.05.1-.7-.05-1.25-.48-1.25Z"
+                  fill="currentColor"
+                  fillRule="evenodd"
+                ></path>
+              </svg>
+            )}
+            {isSearchOpen ? (
+              <IconIG
+                className="group-hover:scale-105 transition-transform text-black dark:text-white"
+                size={28}
+              />
+            ) : null}
+          </button>
+
+          <nav className="flex-1">
+            <ul className="space-y-2">
+              {menuItems.map((item, index) => (
+                <li key={index}>
+                  {item.route ? (
+                    <Link
+                      to={item.route}
+                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-900 transition-colors group"
+                    >
+                      <span className="group-hover:scale-105 transition-transform text-black dark:text-white">
+                        {item.icon}
+                      </span>
+                      {!isSearchOpen && (
+                        <span className="font-bold text-base hidden xl:block text-black dark:text-white tracking-wide">
+                          {item.label}
+                        </span>
+                      )}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={item.onClick ? item.onClick : undefined}
+                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-900 transition-colors group w-full text-left"
+                    >
+                      <span className="group-hover:scale-105 transition-transform text-black dark:text-white">
+                        {item.icon}
+                      </span>
+                      {!isSearchOpen && (
+                        <span className="font-bold text-base hidden xl:block text-black dark:text-white tracking-wide">
+                          {item.label}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="mt-auto pb-8 relative">
+            <button
+              ref={buttonRef}
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+              className={`flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-900 transition-colors group mb-6 w-full ${
+                isMoreMenuOpen ? "font-bold" : ""
+              }`}
+            >
+              <svg
+                aria-label="การตั้งค่า"
+                className={`${
+                  isMoreMenuOpen ? "scale-105" : "group-hover:scale-105"
+                } transition-transform`}
+                fill="currentColor"
+                height="24"
+                role="img"
+                viewBox="0 0 24 24"
+                width="24"
+              >
+                <path
+                  d="M3 12h18M3 6h18M3 18h18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {!isSearchOpen && (
+                <span
+                  className={`text-base hidden xl:block text-black dark:text-white tracking-wide ${
+                    isMoreMenuOpen ? "font-bold" : "font-normal"
+                  }`}
+                >
+                  More
+                </span>
+              )}
+            </button>
+
+            <div className="hidden xl:flex items-center gap-2 text-black dark:text-white opacity-60 hover:opacity-100 cursor-pointer transition-opacity pl-2">
+              {/* This div was empty in the original, keeping it as is */}
+            </div>
+          </div>
+        </div>
+      </div>
+      <SearchDrawer
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
+    </>
+  );
+};
+
+export default Sidebar;

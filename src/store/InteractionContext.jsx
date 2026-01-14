@@ -8,6 +8,7 @@ export const InteractionProvider = ({ children }) => {
   const [likedPosts, setLikedPosts] = useState([]);
   const [savedPosts, setSavedPosts] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [searchInfo, setSearchInfo] = useState({});
 
   const toggleLike = (postId = "") => {
     if (!postId) return;
@@ -43,6 +44,8 @@ export const InteractionProvider = ({ children }) => {
         setPosts,
         stories,
         setStories,
+        searchInfo,
+        setSearchInfo,
         suggestions,
         setSuggestions,
       }}

@@ -1,17 +1,15 @@
 import axios from "axios";
 import lowerCase from "lodash/lowerCase";
-
-const API_END_POINT = process.env.REACT_APP_API_END_POINT;
-const KEY = process.env.REACT_APP_KEY;
+import { API } from "../config/constants";
 
 const axiosRequest = async (method, path, data) => {
-  axios.defaults.baseURL = API_END_POINT;
+  axios.defaults.baseURL = API.API_END_POINT;
   axios.defaults.maxContentLength = 100000000;
   axios.defaults.maxBodyLength = 100000000;
   axios.defaults.timeout = 60 * 4 * 1000;
   axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
   axios.defaults.headers.common["Content-Type"] = "application/json";
-  axios.defaults.headers.common["x-api-key"] = KEY;
+  axios.defaults.headers.common["x-api-key"] = API.API_KEY;
 
   const axiosConfig = {
     method: lowerCase(method),

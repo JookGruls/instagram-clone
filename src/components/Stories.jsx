@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useInteraction } from "../context/InteractionContext";
-import api from "../services/web-service";
+import { useInteraction } from "store/InteractionContext";
+import api from "services/web-service";
 
 const Stories = () => {
   const scrollRef = useRef(null);

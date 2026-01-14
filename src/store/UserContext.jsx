@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState } from "react";
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  // Mock user data - in a real app, this would come from an API/Auth service
   const [user] = useState({
     username: "mike_sattra",
     fullName: "Mikey",
