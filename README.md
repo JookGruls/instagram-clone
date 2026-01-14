@@ -11,7 +11,7 @@ Before running the application (via Docker or locally), you **must** create a `.
 
     ```env
     REACT_APP_API_END_POINT=https://api.thecatapi.com/v1
-    REACT_APP_KEY=your_api_key_here
+    REACT_APP_KEY=live_rwdlVDUecG1OpTGEHMFRP6Ri9ByAV7WVONmg9pmGWGM2xtBT57zGcUajhMEbhXUA
     ```
 
     > **Note:** Without these variables, the application and Docker build **will not work correctly**.
